@@ -1,0 +1,272 @@
+---
+title: "Analysis of Covid19 Cases in USA and Nigeria"
+author: "Agbugah Raymond"
+date:  "`r Sys.Date()`"
+theme: Paper
+---
+
+# **INTRODUCTION**
+Coronavirus disease (COVID-19) is an infectious disease caused by the SARS-CoV-2 virus.
+
+Most people infected with the virus will experience mild to moderate respiratory illness and recover without requiring special treatment. However, some will become seriously ill and require medical attention. Older people and those with underlying medical conditions like cardiovascular disease, diabetes, chronic respiratory disease, or cancer are more likely to develop serious illness. Anyone can get sick with COVID-19 and become seriously ill or die at any age. 
+
+The best way to prevent and slow down transmission is to be well informed about the disease and how the virus spreads. Protect yourself and others from infection by staying at least 1 metre apart from others, wearing a properly fitted mask, and washing your hands or using an alcohol-based rub frequently. Get vaccinated when it’s your turn and follow local guidance.
+
+The virus can spread from an infected person’s mouth or nose in small liquid particles when they cough, sneeze, speak, sing or breathe. These particles range from larger respiratory droplets to smaller aerosols. It is important to practice respiratory etiquette, for example by coughing into a flexed elbow, and to stay home and self-isolate until you recover if you are not fine.
+
+#    **Forecasting of Covid19 Cases in US**
+
+```{r echo=FALSE,message=FALSE,warning=FALSE}
+library(covid19.analytics)
+library(dplyr)
+library(prophet)
+library(lubridate)
+library(ggplot2)
+library(DT)
+library(kableExtra)
+library(lubridate)
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+tsc <- covid19.data(case =  'ts-confirmed') 
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+tsc <- tsc |> filter(Country.Region == "US")
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+tsc <- data.frame(t(tsc))
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+tsc <- cbind(rownames(tsc),data.frame(tsc,row.names = 
+                                        NULL))
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+colnames(tsc) <- c('Dates','comfirmed')
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+tsc <- tsc[-c(1:4),]
+```
+
+```{r,message=FALSE,echo=FALSE,warning=FALSE}
+DT::datatable(
+  head(tsc,377),
+  fillContainer = FALSE,options = 
+    list(pagelength=20)
+)
+```
+
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+tsc$Dates <- ymd(tsc$Dates)
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+tsc$comfirmed <- as.numeric(tsc$comfirmed)
+```
+
+```{r,warning=FALSE,echo=FALSE}
+qplot(Dates,comfirmed, data = tsc,
+      main = 'covid19 comfirmed cases in US')
+```
+
+Looking at the graph you observe that there is a steady increase of confirmed cases of covid19 in USA within the periods of April 2020 to January 2021.
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+ds <- tsc$Dates
+y <- tsc$comfirmed
+df <- data.frame(ds,y)
+```
+
+# **Forecasting**
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+J <- prophet(df)
+```
+
+#  **Prediction**
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+future <- make_future_dataframe(J,30) 
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+forecast <- predict(J,future)
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+```
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+DT::datatable(
+  head(forecast,30),
+  fillContainer = FALSE,options = 
+    list(pagelength = 10)
+)
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+plot(J,forecast,
+     main='Projection of confirmed cases in US')
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+dyplot.prophet(J,forecast)
+```
+
+#**Findings**
+On  29th October 2020, the actual covid19 cases was about 8.97e+6 which is about 30.383million case and the predicted value was about 9.02e+6 which is about 30.52million cases.
+On the 27th December 2020, actual covid19 cases in USA was 1.92e+7 which is about 12.23million cases and the predicted was about 1.94e+7 which is about 12.3million cases. AS at 19th February 2021, the predicted covid19 case 3.04e+7 which is about 15.3million cases. In the line graph you also notice a confidence band which means that the predictions can be slightly higher or lower.
+
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+prophet_plot_components(J,forecast)
+```
+
+From the trend, you observe a steady increase of covid19 cases from April 2020 to January 2021.
+The weekly line graph shows the number of confirmed cases on an average on a lower side Mondays, Tuesdays to Saturdays are higher.Note that this pattern will not come because of the pattern of the illness.so there is need to understand reality and artificial.The pattern we see on that graph is artificial. So we need to understand that not every covid19 cases may be reported and that may lead to lags due to data reporting or data entry. So for the number of confirmed cases to be higher on Tuesdays to Saturdays does not mean that people are infected by covid19 more on these days. So these fluctuation indicates the processes for reporting or checking covid cases.
+
+#  **Model Performance**
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+Pred <- forecast$yhat[1:377]
+actual <- J$history$y
+```
+#  **Forecast Components**
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+plot(actual,Pred)
+```
+
+#  **Estimation**
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+summary(lm(Pred~actual))
+```
+
+Looking at the estimated values you observe that
+multiple R-square and adjusted R-square has a value of 0.9999 with a degree of freedom of 375 and a p-value of 2.2e-16. This means our R-square is very high which means we have a very high confidence that this is statistically significance.
+
+#   **Analysis of Covid19 Cases in Nigeria**
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+tnc <- covid19.data(case =  'ts-confirmed')
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+tnc <- tnc |> filter(Country.Region == "Nigeria")
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+tnc <- data.frame(t(tnc))
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+tnc <- cbind(rownames(tnc),data.frame(tnc,row.names = 
+                                        NULL))
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+colnames(tnc) <- c('Dates','comfirmed')
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+tnc <- tnc[-c(1:4),]
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+DT::datatable(
+  head(tnc,377),
+  fillContainer = FALSE,options = 
+    list(pagelength=20)
+)
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+tnc$Dates <- ymd(tnc$Dates)
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+tnc$comfirmed <- as.numeric(tnc$comfirmed)
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+qplot(Dates,comfirmed, data = tnc,
+      main = 'covid19 comfirmed cases in Nigeria')
+```
+
+From the graph you see a steady increase of confirmed cases of covid19 in Nigeria from April 2020 to January 2021.
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+ds <- tnc$Dates
+y <- tnc$comfirmed
+df<- data.frame(ds,y)
+```
+
+# **Forecasting of Covid19 Cases in Nigeria**
+
+```{r}
+M <- prophet(df)
+```
+
+#  **Prediction**
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+future1 <- make_future_dataframe(M,30) 
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+forecast1 <- predict(M,future1)
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+DT::datatable(
+  head(forecast1,30),
+  fillContainer = FALSE,options = 
+    list(pagelength = 10)
+)
+```
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+plot(M,forecast1,
+     main='Projection of confirmed casesin Nigeria')
+```
+
+```{r,warning=FALSE,echo=FALSE,message=FALSE}
+dyplot.prophet(M,forecast1)
+```
+
+#    **Findings**
+
+On  12th July 2020, the actual covid19 cases was about 32558 Covid19 cases and the predicted value was about 32127 cases.
+On the 20th August 2020, actual covid19 cases in Nigeria was about 50964  cases and the predicted was about 50597  cases. AS at 29th October 2020, the actual covid19 case was about 62521 cases and the predicted value was about 59888 cases.On the 23rd February 2021,the predicted covid19 cases in Nigeria was about 137066. In the line graph you also notice a confidence band which means that the predictions can be slightly higher or lower.
+
+
+#  **Forecast Components**
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+prophet_plot_components(M,forecast1)
+```
+
+From the trend, you observe a steady increase of covid19 cases from April 2020 up-to a point it was steady by the month of October 2020 and by November 18,2020 there was a sharp increase of covid19 cases in Nigeria.
+The weekly line graph shows the number of confirmed cases on an average on a lower side on Tuesdays, Wednesdays to Saturdays are higher.Note that this pattern will not come because of the pattern of the illness.so there is need to understand reality and artificial.The pattern we see on that graph is artificial. So we need to understand that not every covid19 cases may be reported and that may lead to lags due to data reporting or data entry. So for the number of confirmed cases to be higher on Tuesdays to Saturdays does not mean that people are infected by covid19 more on these days. So these fluctuation indicates the processes for reporting or checking covid cases in Nigeria.
+
+#  **Model Performance**
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+Pred <- forecast1$yhat[1:377]
+actual <- M$history$y
+```
+
+```{r,echo=FALSE,warning=FALSE,message=FALSE}
+plot(actual,Pred)
+```
+
+#  **Estimation**
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+summary(lm(Pred~actual))
+```
